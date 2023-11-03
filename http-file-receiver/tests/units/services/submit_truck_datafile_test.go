@@ -36,21 +36,20 @@ func TestSubmitTruckDatafile_Handle(t *testing.T) {
 
 	file, _ := os.Open("../../assets/json_truck_example.json")
 	filedataEvent := entities.DatafileUploadEvent{
-		Filename: "datafile_example",
-		Size:     966,
+		Size: 966,
 	}
 
-	datafileRepository.EXPECT().PutDatafile(file, filedataEvent).Return(nil)
-	eventPublisher.EXPECT().SendEvent(filedataEvent)
-	err := submitDatafileService.Handle(file, filedataEvent.Filename, filedataEvent.Size)
+	datafileRepository.EXPECT().PutDatafile(file, gomock.Any()).Return(nil)
+	eventPublisher.EXPECT().SendEvent(gomock.Any())
+	err := submitDatafileService.Handle(file, filedataEvent.Size)
 	require.Nil(t, err, "Should upload sucessful")
 
-	datafileRepository.EXPECT().PutDatafile(file, filedataEvent).Return(errors.New("failed upload"))
-	err = submitDatafileService.Handle(file, filedataEvent.Filename, filedataEvent.Size)
+	datafileRepository.EXPECT().PutDatafile(file, gomock.Any()).Return(errors.New("failed upload"))
+	err = submitDatafileService.Handle(file, filedataEvent.Size)
 	assert.Equal(t, err.Message, "Unable to upload datafile", "Should return an upload error")
 
-	datafileRepository.EXPECT().PutDatafile(file, filedataEvent).Return(nil)
-	eventPublisher.EXPECT().SendEvent(filedataEvent).Return(errors.New("publish failed"))
-	err = submitDatafileService.Handle(file, filedataEvent.Filename, filedataEvent.Size)
+	datafileRepository.EXPECT().PutDatafile(file, gomock.Any()).Return(nil)
+	eventPublisher.EXPECT().SendEvent(gomock.Any()).Return(errors.New("publish failed"))
+	err = submitDatafileService.Handle(file, filedataEvent.Size)
 	assert.Equal(t, err.Message, "Unable to make a datafile upload event", "Should return a publish error")
 }

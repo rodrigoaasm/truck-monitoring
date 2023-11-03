@@ -7,5 +7,5 @@ import (
 )
 
 type ISubmitTruckDatafileService interface {
-	Handle(file io.Reader, filename string, size int64) *domainerror.DomainError
+	Handle(file io.Reader, size int64) *domainerror.DomainError
 }

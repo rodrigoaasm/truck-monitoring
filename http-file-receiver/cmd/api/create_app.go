@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gorilla/mux"
 	"github.com/rodrigoaasm/truck-monitoring/http-file-receiver/cmd/api/controllers"
 	"github.com/rodrigoaasm/truck-monitoring/http-file-receiver/configs"
@@ -10,22 +12,26 @@ import (
 )
 
 func CreateApp(apiRouter *mux.Router) {
-
 	appConfig := configs.GetConfig()
 
 	// dependencies
-	kafkaPublisherAdapter := adapters.NewKafkaPublisherAdapter(
-		appConfig.Kafka.BrokerList,
-		appConfig.Kafka.Topic,
-	)
 	minioRepository := repositories.NewMinIORepository(
 		appConfig.Minio.Endpoint,
 		appConfig.Minio.AccessKeyID,
 		appConfig.Minio.SecretAccessKey,
 	)
+	kafkaPublisherAdapter, err := adapters.NewKafkaPublisherAdapter(
+		appConfig.Kafka.BrokerList,
+		appConfig.Kafka.Topic,
+	)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	//services
-	submitTruckDatafileService := submittruckdatafileservice.NewSubmitTruckDatafileService(minioRepository, kafkaPublisherAdapter)
+	// services
+	submitTruckDatafileService := submittruckdatafileservice.NewSubmitTruckDatafileService(
+		minioRepository, kafkaPublisherAdapter,
+	)
 
 	// controllers
 	submitTruckDatafileController := controllers.SubmitTruckDatafileController{

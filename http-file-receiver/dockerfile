@@ -1,0 +1,16 @@
+FROM golang:1.21.3 as base
+
+COPY ./ /app/
+
+WORKDIR /app
+
+RUN go build -o http_file_receiver ./cmd/main.go
+
+FROM golang:1.21.3
+
+WORKDIR /app
+COPY --from=base /app/http_file_receiver /app/http_file_receiver
+
+EXPOSE 7001
+
+CMD ["./http_file_receiver"]

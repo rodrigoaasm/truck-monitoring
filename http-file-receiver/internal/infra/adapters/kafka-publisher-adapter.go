@@ -1,49 +1,55 @@
 package adapters
 
 import (
+	"context"
 	"encoding/json"
-	"log"
 
-	"github.com/IBM/sarama"
+	"github.com/google/uuid"
 	"github.com/rodrigoaasm/truck-monitoring/http-file-receiver/internal/domain/interfaces/pubsub"
+	"github.com/segmentio/kafka-go"
 )
 
 type KafkaPublisherAdapter struct {
-	Producer sarama.SyncProducer
-	Topic    string
+	ProducerWriter kafka.Writer
+	Context        context.Context
 }
 
-func NewKafkaPublisherAdapter(brokerList []string, topic string) *KafkaPublisherAdapter {
-	config := sarama.NewConfig()
-
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Return.Successes = true
-
-	producer, err := sarama.NewSyncProducer(brokerList, config)
+func NewKafkaPublisherAdapter(brokerList []string, topic string) (*KafkaPublisherAdapter, error) {
+	kafkaClient, err := kafka.Dial("tcp", brokerList[0])
 	if err != nil {
-		log.Fatal(69, "Failed to open Kafka producer: %s", err)
+		return nil, err
 	}
-	defer func() {
-		if err := producer.Close(); err != nil {
-			log.Println("Failed to close Kafka producer cleanly:", err)
-		}
-	}()
+	kafkaTopic := kafka.TopicConfig{Topic: topic, NumPartitions: 10, ReplicationFactor: 1}
+	err = kafkaClient.CreateTopics(kafkaTopic)
+	if err != nil {
+		return nil, err
+	}
+
+	producerWriter := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: brokerList,
+		Topic:   topic,
+	})
 
 	return &KafkaPublisherAdapter{
-		Producer: producer,
-		Topic:    topic,
-	}
+		ProducerWriter: *producerWriter,
+		Context:        context.Background(),
+	}, nil
 }
 
-func (publisher *KafkaPublisherAdapter) SendEvent(payload pubsub.EventPublisherPayload) error {
-	event, err := json.Marshal(payload)
+func (publisher KafkaPublisherAdapter) SendEvent(payload pubsub.EventPublisherPayload) error {
+	payloadRaw, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	message := &sarama.ProducerMessage{Topic: publisher.Topic, Value: sarama.StringEncoder(event)}
-	if _, _, publishError := publisher.Producer.SendMessage(message); publishError != nil {
-		return publishError
+	if err = publisher.ProducerWriter.WriteMessages(
+		publisher.Context,
+		kafka.Message{
+			Key:   []byte(uuid.New().String()),
+			Value: payloadRaw,
+		},
+	); err != nil {
+		return err
 	}
 
 	return nil

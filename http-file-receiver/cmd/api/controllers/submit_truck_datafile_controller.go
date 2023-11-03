@@ -26,7 +26,7 @@ func (controller SubmitTruckDatafileController) Handle(resWriter http.ResponseWr
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
-	domainerror := controller.SubmitTruckDatafileService.Handle(file, handler.Filename, handler.Size)
+	domainerror := controller.SubmitTruckDatafileService.Handle(file, handler.Size)
 	if domainerror != nil {
 		fmt.Println(domainerror.Message)
 		resWriter.WriteHeader(500)

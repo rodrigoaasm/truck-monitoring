@@ -52,6 +52,21 @@ services:
       - kafka-volume:/var/lib/kafka/data
       - kafka-secrets-volume:/etc/kafka/secrets
 
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    ports:
+      - 9190:9000
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
+    restart: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: '5'
+
   minio-files:
     image: minio/minio:RELEASE.2023-10-14T05-17-22Z
     restart: always
@@ -69,6 +84,20 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    ports:
+      - 9010:9001
+
+  http-file-receiver:
+    image: truck-monitoring/http-file-receiver:test
+    restart: always
+    environment:
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      KAFKA_BROKER_LIST: ${KAFKA_BROKER_LIST}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - 7001:7001
 
 volumes:
   kafka-volume:
