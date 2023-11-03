@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	pubsub "github.com/rodrigoaasm/truck-monitoring/http-file-receiver/internal/interfaces/pubsub"
+	pubsub "github.com/rodrigoaasm/truck-monitoring/http-file-receiver/internal/domain/interfaces/pubsub"
 )
 
 // MockEventPublisherPayload is a mock of EventPublisherPayload interface.
