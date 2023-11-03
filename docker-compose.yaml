@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: "zookeeper:3.9.1-jre-17"
+    restart: always
+    healthcheck:
+      test: echo stat | nc localhost 2181
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    environment:
+      ZOOKEEPER_REPLICAS: "1"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_ELECTION_PORT: 3888
+      ZOOKEEPER_SERVER_PORT: 2888
+      ZOOKEEPER_HEAP_SIZE: "2G"
+      ZOOKEEPER_INIT_LIMIT: "5"
+      ZOOKEEPER_LOG_LEVEL: "INFO"
+      ZOOKEEPER_MAX_CLIENT_CNXNS: "100"
+      ZOOKEEPER_MAX_SESSION_TIMEOUT: "40000"
+      ZOOKEEPER_MIN_SESSION_TIMEOUT: "4000"
+      ZOOKEEPER_PURGE_INTERVAL: "0"
+      ZOOKEEPER_SNAP_RETAIN_COUNT: "3"
+      ZOOKEEPER_SYNC_LIMIT: "10"
+      ZOOKEEPER_TICK_TIME: "2000"
+    volumes:
+      - zookeeper-volume:/var/lib/zookeeper/data
+      - zookeeper-log-volume:/var/lib/zookeeper/log
+      - zookeeper-secrets-volume:/etc/zookeeper/secrets
+
+  kafka:
+    image: bitnami/kafka:3.6.0
+    depends_on:
+      - zookeeper
+    restart: always
+    hostname: "kafka"
+    environment:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "10"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_LOG_RETENTION_MINUTES: "300" # is the max time an individual message should remain
+      KAFKA_LOG_SEGMENT_BYTES: "262144000"
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: "30000"
+    healthcheck:
+      test: ps augwwx | egrep [S]upportedKafka
+    volumes:
+      - kafka-volume:/var/lib/kafka/data
+      - kafka-secrets-volume:/etc/kafka/secrets
+
+  minio-files:
+    image: minio/minio:RELEASE.2023-10-14T05-17-22Z
+    restart: always
+    hostname: minio-files
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-file-volume:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+
+volumes:
+  kafka-volume:
+  kafka-secrets-volume:
+  minio-file-volume:
+  zookeeper-volume:
+  zookeeper-log-volume:
+  zookeeper-secrets-volume:
