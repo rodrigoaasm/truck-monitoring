@@ -8,5 +8,5 @@ type DatafileUploadEvent struct {
 }
 
 type DatafileProcessServiceInterface interface {
-	Process(DatafileUploadEvent) domainerror.DomainError
+	Process(DatafileUploadEvent) *domainerror.DomainError
 }
