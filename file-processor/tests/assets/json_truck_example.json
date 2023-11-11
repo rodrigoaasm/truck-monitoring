@@ -1,0 +1,34 @@
+{
+    "id": "1284411abbh-erttfdfgv-198125",
+    "plate": "ABC1D12",
+    "chassis": "4T1BD1EB0FU036684",
+    "data": [
+      {
+        "timestamp": 1698930000,
+        "cockpit_temperature": 29.7,
+        "lon": -22.0132000,
+        "log": 44.0132000,
+        "motion": true,
+        "speed": 91,
+        "travelled_distance_last_hours": 87,
+        "kilometerage":195000,
+        "engine_rotation": 1900,
+        "march": "4r",
+        "gasoline": 181,
+        "slight_engine_failure": false,
+        "serious_engine_failure": false,  
+        "oil_temperature": 91.2,
+        "oil_pressure": 1.8,
+        "water_in_fuel": false,
+        "water_temperature": 71,
+        "water_tank": 89,
+        "air_pressure": 1.2,
+        "cooler_failed": false,
+        "battery_voltage": 12.31456,
+        "battery_current": 149.12544,
+        "battery_charge": 89,
+        "alternator_voltage": 23.98741,
+        "alternator_current": 89.25711
+      }
+    ]
+  }
